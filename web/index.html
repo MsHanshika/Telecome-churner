@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Telecom Churn Demo</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+<div class="container">
+    <h1> Telecom Churn Prediction</h1>
+    <p class="subtitle">Predict customer churn probability</p>
+
+    <form id="predict-form">
+        <div class="form-group">
+            <label>Gender</label>
+            <select name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Senior Citizen</label>
+            <select name="SeniorCitizen">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Partner</label>
+            <select name="Partner">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Dependents</label>
+            <select name="Dependents">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Tenure (months)</label>
+            <input type="number" name="tenure" value="12" min="0" required/>
+        </div>
+
+        <div class="form-group">
+            <label>Monthly Charges ($)</label>
+            <input type="number" name="MonthlyCharges" value="70" step="0.01" min="0" required/>
+        </div>
+
+        <div class="form-group">
+            <label>Total Charges ($)</label>
+            <input type="number" name="TotalCharges" value="840" step="0.01" min="0" required/>
+        </div>
+
+        <div class="form-group">
+            <label>Phone Service</label>
+            <select name="PhoneService">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Internet Service</label>
+            <select name="InternetService">
+                <option value="Fiber optic">Fiber optic</option>
+                <option value="DSL">DSL</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Contract</label>
+            <select name="Contract">
+                <option value="Month-to-month">Month-to-month</option>
+                <option value="One year">One year</option>
+                <option value="Two year">Two year</option>
+            </select>
+        </div>
+
+        <button type="submit">🔮 Predict Churn</button>
+    </form>
+
+    <div id="result"></div>
+</div>
+
+<script>
+const form = document.getElementById('predict-form');
+const resultDiv = document.getElementById('result');
+
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    // Show loading state
+    form.classList.add('loading');
+    resultDiv.style.display = 'none';
+
+    try {
+        const formData = new FormData(form);
+        const data = {};
+        
+        formData.forEach((value, key) => {
+            // Convert numeric fields
+            if (['tenure', 'MonthlyCharges', 'TotalCharges', 'SeniorCitizen'].includes(key)) {
+                data[key] = parseFloat(value);
+            } else {
+                data[key] = value;
+            }
+        });
+
+        console.log('Sending data:', data);
+        
+        const resp = await fetch('http://127.0.0.1:8000/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        console.log('Response status:', resp.status);
+        console.log('Response ok:', resp.ok);
+
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error('Error response:', errorText);
+            throw new Error(`HTTP ${resp.status}: ${errorText}`);
+        }
+
+        const result = await resp.json();
+        console.log('Result received:', result);
+        
+        // Display result
+        const prob = (result.churn_probability * 100).toFixed(1);
+        const risk = result.risk_level || (prob >= 70 ? 'High' : prob >= 40 ? 'Medium' : 'Low');
+        
+        console.log('Displaying result - prob:', prob, 'risk:', risk);
+
+        resultDiv.style.display = 'block';
+        
+        resultDiv.className = `result-${risk.toLowerCase()} show`;
+        
+        const emoji = risk === 'High' ? '⚠️' : risk === 'Medium' ? '⚡' : '✅';
+        
+        resultDiv.innerHTML = `
+            <div class="result-label">${emoji} ${risk} Risk</div>
+            <div class="result-prob">${prob}%</div>
+            <div>Churn Probability</div>
+        `;
+        
+        console.log('Result displayed successfully');
+    } catch (err) {
+        console.error('Caught error:', err);
+
+        resultDiv.style.display = 'block';
+        
+        resultDiv.className = 'result-high show';
+        resultDiv.innerHTML = `
+            <div class="result-label">❌ Error</div>
+            <div>${err.message}</div>
+            <div style="margin-top:8px; font-size:13px; opacity:0.7;">
+                Make sure the API server is running on http://localhost:8000
+            </div>
+        `;
+    } finally {
+        form.classList.remove('loading');
+    }
+});
+</script>
+
+</body>
+
+</html>
