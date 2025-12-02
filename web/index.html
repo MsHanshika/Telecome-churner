@@ -118,7 +118,7 @@ form.addEventListener('submit', async e => {
 
         console.log('Sending data:', data);
         
-        const resp = await fetch('https://telecome-churner.onrender.com/predict', {
+        const resp = await fetch('https://telecome-churner-api.onrender.com/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
