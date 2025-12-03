@@ -136,6 +136,8 @@ form.addEventListener('submit', async e => {
         const result = await resp.json();
         console.log('Result received:', result);
         
+        resultDiv.style.display = 'block';
+
         // Display result
         const prob = (result.churn_probability * 100).toFixed(1);
         const risk = result.risk_level || (prob >= 70 ? 'High' : prob >= 40 ? 'Medium' : 'Low');
@@ -155,7 +157,9 @@ form.addEventListener('submit', async e => {
         console.log('Result displayed successfully');
     } catch (err) {
         console.error('Caught error:', err);
+        resultDiv.style.display = 'block';
         resultDiv.className = 'result-high show';
+        
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
