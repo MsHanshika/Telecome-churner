@@ -169,9 +169,16 @@ form.addEventListener('submit', async e => {
         `;
         
         console.log('Result displayed successfully');
+        return;
     } catch (err) {
         console.error('Caught error:', err);
+
+        loadingOverlay.classList.remove('show');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+
         resultDiv.className = 'result-high show';
+        resultDiv.style.display = 'block';
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
@@ -181,9 +188,11 @@ form.addEventListener('submit', async e => {
         `;
     } finally {
         // Hide loading overlay
-        loadingOverlay.classList.remove('show');
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalButtonText;
+        if (loadingOverlay.classList.contains('show')){
+            loadingOverlay.classList.remove('show');
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        }
     }
 });
 </script>
