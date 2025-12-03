@@ -95,29 +95,20 @@
 <script>
 const form = document.getElementById('predict-form');
 const resultDiv = document.getElementById('result');
-const submitBtn = form.querySelector('button'); // Get the button
 
 form.addEventListener('submit', async e => {
     e.preventDefault();
 
-    // 1. UI FEEDBACK: Disable button & show loading state immediately
-    const originalBtnText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '⏳ Predicting...';
-    
-    // Show spinner in the result area
-    resultDiv.style.display = 'block';
-    resultDiv.className = ''; // Reset class
-    resultDiv.innerHTML = `
-        <div class="loader"></div>
-        <div class="loading-text">Analyzing customer data...</div>
-    `;
+    // Show loading state
+    form.classList.add('loading');
+    resultDiv.style.display = 'none';
 
     try {
         const formData = new FormData(form);
         const data = {};
         
         formData.forEach((value, key) => {
+            // Convert numeric fields
             if (['tenure', 'MonthlyCharges', 'TotalCharges', 'SeniorCitizen'].includes(key)) {
                 data[key] = parseFloat(value);
             } else {
@@ -125,25 +116,34 @@ form.addEventListener('submit', async e => {
             }
         });
 
-        // REPLACE WITH YOUR RENDER URL
-        const resp = await fetch('https://your-app-name.onrender.com/predict', { 
+        console.log('Sending data:', data);
+        
+        const resp = await fetch('https://telecome-churner-api.onrender.com', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        console.log('Response status:', resp.status);
+        console.log('Response ok:', resp.ok);
 
         if (!resp.ok) {
             const errorText = await resp.text();
+            console.error('Error response:', errorText);
             throw new Error(`HTTP ${resp.status}: ${errorText}`);
         }
 
         const result = await resp.json();
+        console.log('Result received:', result);
         
-        // 2. DISPLAY RESULT (Overwrites the spinner)
+        // Display result
         const prob = (result.churn_probability * 100).toFixed(1);
         const risk = result.risk_level || (prob >= 70 ? 'High' : prob >= 40 ? 'Medium' : 'Low');
         
+        console.log('Displaying result - prob:', prob, 'risk:', risk);
+        
         resultDiv.className = `result-${risk.toLowerCase()} show`;
+        
         const emoji = risk === 'High' ? '⚠️' : risk === 'Medium' ? '⚡' : '✅';
         
         resultDiv.innerHTML = `
@@ -152,17 +152,18 @@ form.addEventListener('submit', async e => {
             <div>Churn Probability</div>
         `;
         
+        console.log('Result displayed successfully');
     } catch (err) {
-        console.error(err);
+        console.error('Caught error:', err);
         resultDiv.className = 'result-high show';
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
+            <div style="margin-top:8px; font-size:13px; opacity:0.7;">
+                Make sure the API server is running on http://localhost:8000
+            </div>
         `;
     } finally {
-        // 3. CLEANUP: Always re-enable the button when done
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
         form.classList.remove('loading');
     }
 });
