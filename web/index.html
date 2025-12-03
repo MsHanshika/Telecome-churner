@@ -118,7 +118,7 @@ form.addEventListener('submit', async e => {
 
         console.log('Sending data:', data);
         
-        const resp = await fetch('https://telecome-churner-api.onrender.com', {
+        const resp = await fetch('https://telecome-churner-api.onrender.com/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -159,7 +159,7 @@ form.addEventListener('submit', async e => {
         console.error('Caught error:', err);
         resultDiv.style.display = 'block';
         resultDiv.className = 'result-high show';
-        
+
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
