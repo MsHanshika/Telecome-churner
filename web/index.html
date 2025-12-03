@@ -17,7 +17,7 @@
 </div>
 
 <div class="container">
-    <h1>Telecom Churn Prediction</h1>
+    <h1>📊 Telecom Churn Prediction</h1>
     <p class="subtitle">Predict customer churn probability</p>
 
     <form id="predict-form">
@@ -114,7 +114,7 @@ form.addEventListener('submit', async e => {
     loadingOverlay.classList.add('show');
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner"></span>Predicting...';
-    resultDiv.style.display = 'none';
+    resultDiv.classList.remove('show');
 
     try {
         const formData = new FormData(form);
@@ -131,7 +131,7 @@ form.addEventListener('submit', async e => {
 
         console.log('Sending data:', data);
         
-        const resp = await fetch('https://telecome-churner-api.onrender.com/predict', {
+        const resp = await fetch('http://127.0.0.1:8000/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -152,13 +152,16 @@ form.addEventListener('submit', async e => {
         // Add a small delay for smooth UX
         await new Promise(resolve => setTimeout(resolve, 500));
         
+        // Hide loading first
+        loadingOverlay.classList.remove('show');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
+        
         // Display result
         const prob = (result.churn_probability * 100).toFixed(1);
         const risk = result.risk_level || (prob >= 70 ? 'High' : prob >= 40 ? 'Medium' : 'Low');
         
         console.log('Displaying result - prob:', prob, 'risk:', risk);
-        
-        resultDiv.className = `result-${risk.toLowerCase()} show`;
         
         const emoji = risk === 'High' ? '⚠️' : risk === 'Medium' ? '⚡' : '✅';
         
@@ -168,15 +171,18 @@ form.addEventListener('submit', async e => {
             <div>Churn Probability</div>
         `;
         
+        resultDiv.className = `result-${risk.toLowerCase()} show`;
+        
         console.log('Result displayed successfully');
         return;
     } catch (err) {
         console.error('Caught error:', err);
-
+        
+        // Hide loading first
         loadingOverlay.classList.remove('show');
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonText;
-
+        
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
@@ -186,8 +192,8 @@ form.addEventListener('submit', async e => {
         `;
         resultDiv.className = 'result-high show';
     } finally {
-        // Hide loading overlay
-        if (loadingOverlay.classList.contains('show')){
+        // Only hide loading if we didn't already handle it
+        if (loadingOverlay.classList.contains('show')) {
             loadingOverlay.classList.remove('show');
             submitButton.disabled = false;
             submitButton.innerHTML = originalButtonText;
@@ -197,5 +203,4 @@ form.addEventListener('submit', async e => {
 </script>
 
 </body>
-
 </html>
