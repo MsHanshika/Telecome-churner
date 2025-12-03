@@ -8,8 +8,16 @@
 </head>
 
 <body>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Analyzing Customer</div>
+        <div class="loading-subtext">Predicting churn probability...</div>
+    </div>
+</div>
+
 <div class="container">
-    <h1> Telecom Churn Prediction</h1>
+    <h1>Telecom Churn Prediction</h1>
     <p class="subtitle">Predict customer churn probability</p>
 
     <form id="predict-form">
@@ -95,12 +103,17 @@
 <script>
 const form = document.getElementById('predict-form');
 const resultDiv = document.getElementById('result');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const submitButton = form.querySelector('button[type="submit"]');
+const originalButtonText = submitButton.innerHTML;
 
 form.addEventListener('submit', async e => {
     e.preventDefault();
 
-    // Show loading state
-    form.classList.add('loading');
+    // Show loading overlay
+    loadingOverlay.classList.add('show');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner"></span>Predicting...';
     resultDiv.style.display = 'none';
 
     try {
@@ -136,13 +149,14 @@ form.addEventListener('submit', async e => {
         const result = await resp.json();
         console.log('Result received:', result);
         
+        // Add a small delay for smooth UX
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Display result
         const prob = (result.churn_probability * 100).toFixed(1);
         const risk = result.risk_level || (prob >= 70 ? 'High' : prob >= 40 ? 'Medium' : 'Low');
         
         console.log('Displaying result - prob:', prob, 'risk:', risk);
-
-        resultDiv.style.display = 'block';
         
         resultDiv.className = `result-${risk.toLowerCase()} show`;
         
@@ -157,9 +171,6 @@ form.addEventListener('submit', async e => {
         console.log('Result displayed successfully');
     } catch (err) {
         console.error('Caught error:', err);
-
-        resultDiv.style.display = 'block';
-        
         resultDiv.className = 'result-high show';
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
@@ -169,7 +180,10 @@ form.addEventListener('submit', async e => {
             </div>
         `;
     } finally {
-        form.classList.remove('loading');
+        // Hide loading overlay
+        loadingOverlay.classList.remove('show');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
     }
 });
 </script>
