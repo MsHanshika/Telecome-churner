@@ -177,8 +177,6 @@ form.addEventListener('submit', async e => {
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonText;
 
-        resultDiv.className = 'result-high show';
-        resultDiv.style.display = 'block';
         resultDiv.innerHTML = `
             <div class="result-label">❌ Error</div>
             <div>${err.message}</div>
@@ -186,6 +184,7 @@ form.addEventListener('submit', async e => {
                 Make sure the API server is running on http://localhost:8000
             </div>
         `;
+        resultDiv.className = 'result-high show';
     } finally {
         // Hide loading overlay
         if (loadingOverlay.classList.contains('show')){

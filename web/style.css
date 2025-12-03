@@ -156,7 +156,8 @@ button:disabled {
 }
 
 #result.show {
-display: block;
+    opacity: 1;
+    visibility: visible;
 }
 
 .result-high {
